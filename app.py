@@ -25,12 +25,13 @@ AVATARS = {"user": ":material/person:", "assistant": ":material/devices:"}
 
 # ---------- Settings ----------
 
+
 def get_setting(name: str, default: str | None = None) -> str | None:
     try:
         if name in st.secrets:
             return str(st.secrets[name])
     except Exception:
-        pass  # no secrets.toml — fall back to environment variables
+        pass
     return os.environ.get(name, default)
 
 
@@ -40,7 +41,7 @@ def get_advisor(api_key: str, model: str, search: bool) -> Advisor:
 
 
 API_KEY = get_setting("GEMINI_API_KEY")
-MODEL = get_setting("GEMINI_MODEL", "gemini-flash-latest")
+MODEL = get_setting("GEMINI_MODEL", "gemini-3.5-flash")
 SEARCH = (get_setting("GEMINI_SEARCH", "true") or "").lower() != "false"
 
 
@@ -66,32 +67,44 @@ def apply_budget_preset(category: str) -> None:
 
 
 def clear_budget_preset(category: str) -> None:
-    if st.session_state.get(f"preset_{category}") != st.session_state.get(f"budget_{category}"):
+    if st.session_state.get(f"preset_{category}") != st.session_state.get(
+        f"budget_{category}"
+    ):
         st.session_state[f"preset_{category}"] = None
 
 
 # ---------- Sidebar: user profile ----------
 
 with st.sidebar:
-    st.markdown(
-        """
-        <div class="brand">
-          <div class="brand-mark">P</div>
-          <div>
-            <div class="brand-name">Pilihin</div>
-            <div class="brand-tag">Asisten belanja elektronik</div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.button(
-        "Percakapan baru",
-        icon=":material/add_comment:",
-        on_click=reset_chat,
-        width="stretch",
-        disabled=not st.session_state.messages,
-    )
+    with st.container(
+        key="sidebar_head",
+        horizontal=True,
+        vertical_alignment="center",
+        gap="small",
+        wrap=False,
+    ):
+        st.markdown(
+            """
+            <div class="brand">
+              <div class="brand-mark">P</div>
+              <div>
+                <div class="brand-name">Pilihin</div>
+                <div class="brand-tag">Asisten belanja elektronik</div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+            width="stretch",
+        )
+        st.button(
+            "",
+            key="new_chat",
+            icon=":material/edit_square:",
+            help="Percakapan baru",
+            type="tertiary",
+            on_click=reset_chat,
+            disabled=not st.session_state.messages,
+        )
 
     st.markdown('<p class="section-title">Profil kebutuhan</p>', unsafe_allow_html=True)
 
@@ -126,7 +139,9 @@ with st.sidebar:
         label_visibility="collapsed",
         persist_state="session",
     )
-    st.caption(format_rupiah(budget) if budget else "Belum diisi — asisten akan menanyakannya.")
+    st.caption(
+        format_rupiah(budget) if budget else "Belum diisi — asisten akan menanyakannya."
+    )
 
     purposes = st.pills(
         "Tujuan penggunaan",
@@ -188,14 +203,19 @@ with st.sidebar:
         args=(recommend_request(profile),),
         disabled=not API_KEY,
     )
-    st.caption("Profil ikut terkirim di setiap pesan. Harga bersifat perkiraan — cek kembali di toko resmi.")
+    st.caption(
+        "Profil ikut terkirim di setiap pesan. Harga bersifat perkiraan — cek kembali di toko resmi."
+    )
 
 
 # ---------- Main area ----------
 
+
 def profile_chips(p: dict) -> str:
     chips = [f"{CATEGORIES[p['category']]['label']}"]
-    chips.append(f"Maks. {format_rupiah(p['budget'])}" if p["budget"] else "Budget belum diisi")
+    chips.append(
+        f"Maks. {format_rupiah(p['budget'])}" if p["budget"] else "Budget belum diisi"
+    )
     chips += p["purposes"][:3]
     return "".join(f'<span class="chip">{html.escape(c)}</span>' for c in chips)
 
@@ -276,7 +296,6 @@ if prompt and API_KEY:
                 lambda search: build_system_instruction(profile, search),
                 result,
             )
-            # Keep the spinner until the first token arrives, then stream the rest.
             with st.spinner("Menganalisis kebutuhan Anda…"):
                 first = next(stream, None)
             if first is not None:
@@ -285,6 +304,11 @@ if prompt and API_KEY:
             error = str(exc)
 
     st.session_state.messages.append(
-        {"role": "assistant", "content": result.text, "sources": result.sources, "error": error}
+        {
+            "role": "assistant",
+            "content": result.text,
+            "sources": result.sources,
+            "error": error,
+        }
     )
-    st.rerun()  # refresh the sidebar and render the reply with its sources
+    st.rerun()
