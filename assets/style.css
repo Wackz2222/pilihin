@@ -6,7 +6,6 @@
 }
 
 /* ---------- Sidebar ---------- */
-/* Streamlit's own header only holds the collapse button; float it over our brand row. */
 [data-testid="stSidebarHeader"] {
   position: absolute;
   top: 0;
@@ -26,7 +25,7 @@
 .st-key-sidebar_head {
   min-height: 64px !important;
   margin-top: 0 !important;
-  padding: 0 2.5rem 0 0 !important; /* right: room for the collapse button */
+  padding: 0 2.5rem 0 0 !important;
   margin-bottom: 0.25rem;
   border-bottom: 1px solid #e3e6eb;
 }
@@ -48,7 +47,7 @@
   align-items: center;
   gap: 0.75rem;
   position: relative;
-  top: -7px; /* offset Streamlit's markdown spacing so it lines up with the header buttons */
+  top: -7px;
 }
 .brand-mark {
   flex-shrink: 0;
@@ -135,7 +134,9 @@
   min-height: 64px;
   padding: 0.75rem 1rem;
   background: #fff;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 [class*="st-key-sugg_"] button:hover {
   border-color: #2f5bea;
